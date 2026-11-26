@@ -1,0 +1,35 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    # Chạy tự động mỗi 6 tiếng (có thể chỉnh cron tùy ý)
+    - cron: '0 */0.5 * * *'
+  workflow_dispatch: # Cho phép bấm chạy thủ công ngay lập tức
+
+permissions:
+  contents: write
+
+jobs:
+  sync-latest-from-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          upstream_sync_repo: PhamHaThang/bookaria-viewer
+          upstream_sync_branch: main
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          test_mode: false
+
+      - name: Check for sync failure
+        if: failure()
+        run: |
+          echo "[ERROR] Sync thất bại do conflict hoặc lỗi cấu hình."
+          exit 1
